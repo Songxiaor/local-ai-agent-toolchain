@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${AI_SKILLS_ROOT:-$HOME/.cc-switch}"
+SKILLS_SRC="$ROOT/skills"
+CLAUDE_COMMANDS_SRC="$ROOT/claude-commands"
+
+SKILL_TARGETS=(
+  "$HOME/.claude/skills"
+  "$HOME/.codex/skills"
+  "$HOME/.gemini/skills"
+  "$HOME/.config/opencode/skills"
+)
+
+COMMAND_TARGETS=(
+  "$HOME/.claude/commands"
+)
+
+usage() {
+  cat <<'EOF'
+Usage:
+  sync-ai-skills sync
+  sync-ai-skills status
+
+Environment:
+  AI_SKILLS_ROOT   Override the shared source root (default: ~/.cc-switch)
+
+Layout:
+  ~/.cc-switch/
+    skills/<skill-name>/SKILL.md
+    claude-commands/<command-name>/SKILL.md
+
+Notes:
+  - This script only manages symlinks.
+  - Existing real directories are never overwritten.
+  - Put cross-platform reusable skills in "skills/".
+  - Put Claude-only slash-command wrappers in "claude-commands/".
+EOF
+}
+
+ensure_dir() {
+  mkdir -p "$1"
+}
+
+is_symlink_to() {
+  local path="$1"
+  local expected="$2"
+  if [[ -L "$path" ]]; then
+    local resolved
+    resolved="$(python3 - <<'PY' "$path" "$expected"
+import os, sys
+path = os.path.realpath(sys.argv[1])
+expected = os.path.realpath(sys.argv[2])
+print("yes" if path == expected else "no")
+PY
+)"
+    [[ "$resolved" == "yes" ]]
+    return
+  fi
+  return 1
+}
+
+link_children() {
+  local source_dir="$1"
+  local target_dir="$2"
+  local label="$3"
+
+  ensure_dir "$source_dir"
+  ensure_dir "$target_dir"
+
+  shopt -s nullglob
+  local child
+  for child in "$source_dir"/*; do
+    [[ -d "$child" ]] || continue
+    local name
+    name="$(basename "$child")"
+    local target="$target_dir/$name"
+
+    if [[ -L "$target" ]]; then
+      ln -sfn "$child" "$target"
+      echo "updated  [$label] $target -> $child"
+      continue
+    fi
+
+    if [[ -e "$target" ]]; then
+      echo "skipped  [$label] $target (real path exists)"
+      continue
+    fi
+
+    ln -s "$child" "$target"
+    echo "linked   [$label] $target -> $child"
+  done
+  shopt -u nullglob
+}
+
+status_children() {
+  local source_dir="$1"
+  local target_dir="$2"
+  local label="$3"
+
+  ensure_dir "$source_dir"
+  ensure_dir "$target_dir"
+
+  echo "== $label =="
+  shopt -s nullglob
+  local child
+  for child in "$source_dir"/*; do
+    [[ -d "$child" ]] || continue
+    local name
+    name="$(basename "$child")"
+    local target="$target_dir/$name"
+
+    if is_symlink_to "$target" "$child"; then
+      echo "ok      $target"
+    elif [[ -L "$target" ]]; then
+      echo "mismatch $target"
+    elif [[ -e "$target" ]]; then
+      echo "blocked $target"
+    else
+      echo "missing $target"
+    fi
+  done
+  shopt -u nullglob
+}
+
+cmd="${1:-sync}"
+
+case "$cmd" in
+  sync)
+    for target in "${SKILL_TARGETS[@]}"; do
+      link_children "$SKILLS_SRC" "$target" "skill"
+    done
+    for target in "${COMMAND_TARGETS[@]}"; do
+      link_children "$CLAUDE_COMMANDS_SRC" "$target" "command"
+    done
+    ;;
+  status)
+    for target in "${SKILL_TARGETS[@]}"; do
+      status_children "$SKILLS_SRC" "$target" "$target"
+    done
+    for target in "${COMMAND_TARGETS[@]}"; do
+      status_children "$CLAUDE_COMMANDS_SRC" "$target" "$target"
+    done
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

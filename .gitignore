@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*token*
+*oauth*
+*auth*
+*.key
+*.pem
+screenshots/private/

@@ -1,0 +1,6 @@
+# Example only. Do not paste secrets into public repositories.
+
+[mcp_servers.wbe-search]
+type = "stdio"
+command = "python3"
+args = ["/Users/song/.local/bin/wbe_search_mcp.py"]

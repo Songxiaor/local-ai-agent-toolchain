@@ -1,0 +1,15 @@
+Shared skill source:
+
+  ~/.cc-switch/skills -> /Users/song/AI Skills
+
+Client targets:
+
+  ~/.claude/skills
+  ~/.codex/skills
+  ~/.gemini/skills
+  ~/.config/opencode/skills
+
+Desktop launchers:
+
+  ~/Desktop/AI工具/同步AI技能.command
+  ~/Desktop/AI工具/检查AI技能状态.command
