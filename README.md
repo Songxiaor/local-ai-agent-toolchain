@@ -1,5 +1,7 @@
 # Local AI Agent Toolchain Automation
 
+License: MIT
+
 这是一个本地 AI 工具链自动化工作流，用来解决多平台 Agent 能力割裂、MCP 工具不可用、安装配置重复、历史记录和技能资产分散的问题。
 
 核心思路不是为每个客户端重复迁移配置，而是让 Agent 先读取本机真实环境，再制定修复方案，并直接完成配置、脚本、依赖和验证工作。
@@ -64,6 +66,12 @@ python3 ~/.local/bin/wbe_search_mcp.py
 可截图位置见 [docs/evidence-guide.zh-CN.md](docs/evidence-guide.zh-CN.md)。
 
 申请表可粘贴版本见 [docs/application-answer.zh-CN.md](docs/application-answer.zh-CN.md)。
+
+脱敏工作流示例见 [examples/agent-maintenance-workflow.md](examples/agent-maintenance-workflow.md)。
+
+## 参与维护
+
+贡献和维护流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 安全说明
 
